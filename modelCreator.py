@@ -32,28 +32,37 @@ with open(r"C:\CVI620NSATestingData\driving_log.csv", mode="r", encoding='utf-8'
             print(f'[INFO] {index} images processed!')
             break
 
-X = np.array(image_list).astype('float32')
-y = np.array(wheel_list).astype('float32')
-X_train, X_test, y_train, y_test = train_test_split(X, y)
+X = np.array(image_list, dtype='float32')
+y = np.array(wheel_list, dtype='float32')
 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# MODEL
 model = Sequential([
-    layers.Flatten(input_shape=X_train.shape[1:]), 
-    layers.Dense(20, activation='relu'),
-    layers.Dense(8, activation='relu'),
-    layers.Dense(1) 
+    layers.Dense(128, activation='relu'),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(16, activation='relu'),
+    layers.Dense(1, activation='linear')
 ])
 
-model.compile(optimizer='SGD',
-              loss='mse',             
+model.compile(optimizer='adam',
+              loss='mean_squared_error',
               metrics=['mae'])
 
-H = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=256)
+H = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=32)
 
-# # EVALUATION
-# plt.plot(np.arange(10), H.history['accuracy'], label='train accuracy')
-# plt.plot(np.arange(10), H.history['val_accuracy'], label='test accuracy')
+# EVALUATION
+plt.figure(figsize=(12, 4))
+plt.subplot(1, 2, 1)
 plt.plot(np.arange(10), H.history['loss'], label='train loss')
 plt.plot(np.arange(10), H.history['val_loss'], label='test loss')
+plt.title('Model Loss (MSE)')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(np.arange(10), H.history['mae'], label='train MAE')
+plt.plot(np.arange(10), H.history['val_mae'], label='test MAE')
+plt.title('Model Metric (MAE)')
 plt.legend()
 plt.show()
 
