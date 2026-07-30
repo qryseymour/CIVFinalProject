@@ -32,25 +32,20 @@ with open(r"C:\CVI620NSATestingData\driving_log.csv", mode="r", encoding='utf-8'
             print(f'[INFO] {index} images processed!')
             break
 
-X = np.array(image_list)
-y = np.array(wheel_list)
+X = np.array(image_list).astype('float32')
+y = np.array(wheel_list).astype('float32')
 X_train, X_test, y_train, y_test = train_test_split(X, y)
-le = LabelEncoder()
-y_train = le.fit_transform(y_train)
-y_test = le.transform(y_test)
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
 
-# MODEL
 model = Sequential([
+    layers.Flatten(input_shape=X_train.shape[1:]), 
     layers.Dense(20, activation='relu'),
     layers.Dense(8, activation='relu'),
-    layers.Dense(2, activation='softmax')
+    layers.Dense(1) 
 ])
 
 model.compile(optimizer='SGD',
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
+              loss='mse',             
+              metrics=['mae'])
 
 H = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=256)
 
@@ -59,8 +54,6 @@ H = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, bat
 # plt.plot(np.arange(10), H.history['val_accuracy'], label='test accuracy')
 plt.plot(np.arange(10), H.history['loss'], label='train loss')
 plt.plot(np.arange(10), H.history['val_loss'], label='test loss')
-plt.plot(np.arange(10), H.history['accuracy'], label='train accuracy')
-plt.plot(np.arange(10), H.history['val_accuracy'], label='test accuracy')
 plt.legend()
 plt.show()
 
