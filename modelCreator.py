@@ -30,7 +30,6 @@ with open(r"C:\CVI620NSATestingData\driving_log.csv", mode="r", encoding='utf-8'
         if index%200==0:
 
             print(f'[INFO] {index} images processed!')
-            break
 
 X = np.array(image_list, dtype='float32')
 y = np.array(wheel_list, dtype='float32')
@@ -52,17 +51,12 @@ model.compile(optimizer='adam',
 H = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=32)
 
 # EVALUATION
-plt.figure(figsize=(12, 4))
-plt.subplot(1, 2, 1)
-plt.plot(np.arange(10), H.history['loss'], label='train loss')
-plt.plot(np.arange(10), H.history['val_loss'], label='test loss')
-plt.title('Model Loss (MSE)')
-plt.legend()
-
-plt.subplot(1, 2, 2)
-plt.plot(np.arange(10), H.history['mae'], label='train MAE')
-plt.plot(np.arange(10), H.history['val_mae'], label='test MAE')
-plt.title('Model Metric (MAE)')
+plt.figure(figsize=(10, 5))
+plt.hist(y, bins=50, color='blue', edgecolor='black', alpha=0.7)
+plt.title('Distribution of Steering Wheel Angles', fontsize=14)
+plt.xlabel('Steering Angle (Radians/Degrees)', fontsize=12)
+plt.ylabel('Number of Images (Frequency)', fontsize=12)
+plt.grid(axis='y', alpha=0.75)
 plt.legend()
 plt.show()
 
