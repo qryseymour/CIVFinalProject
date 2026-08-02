@@ -5,50 +5,105 @@ import glob
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from keras.utils import to_categorical
-from keras import Sequential, layers
+from keras import Sequential, layers, optimizers
 import matplotlib.pyplot as plt
 from keras.models import save_model, load_model
+import os
+from keras.callbacks import EarlyStopping
+
+# Added for data augmentation, shared preprocessing, and disk-backed batching
+from batch_generator import batch_generator, steps_per_epoch
 
 # DATA
 image_list = []
 wheel_list = []
 
-with open(r"C:\CVI620NSATestingData\driving_log.csv", mode="r", encoding='utf-8') as file:
+# Default 
+DATA_DIR = os.environ.get('CVI620_DATA_DIR', r'C:\CVI620NSATestingData')
+CSV_PATH = os.path.join(DATA_DIR, 'driving_log.csv')
+
+with open(CSV_PATH, mode="r", encoding='utf-8') as file:
     csv_reader = csv.reader(file)
     
     for index, row in enumerate(csv_reader, start=1):
 
         print(f"Row {index}: {row}")
 
-        image = cv2.imread(row[0])
-        image = cv2.resize(image, (32, 32))
-        image = image/255
-        image = image.flatten()
-        image_list.append(image)
+        # Switched from flattened 32×32 images to simulator compatible preprocessing and batching, so on the same 200×66 image pipeline used at test time
+        # Remapped CSV paths to the local IMG/ folder
+        center_path = row[0].strip()
+        filename = os.path.basename(center_path.replace('\\', '/'))
+        local_path = os.path.join(DATA_DIR, 'IMG', filename)
+        image_list.append(local_path)
         wheel_list.append(row[3])
 
         if index%200==0:
 
             print(f'[INFO] {index} images processed!')
 
-X = np.array(image_list, dtype='float32')
+# Paths for the generator
+X = np.array(image_list)
 y = np.array(wheel_list, dtype='float32')
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# MODEL
+# Replaced the flattened dense network with a CNN trained on 200×66 image tensors with the old model collapse
 model = Sequential([
-    layers.Dense(128, activation='relu'),
-    layers.Dense(64, activation='relu'),
-    layers.Dense(16, activation='relu'),
-    layers.Dense(1, activation='linear')
+    layers.Lambda(lambda x: x - 0.5, input_shape=(66, 200, 3)),
+    layers.Conv2D(24, (5, 5), strides=(2, 2), activation='elu'),
+    layers.Conv2D(36, (5, 5), strides=(2, 2), activation='elu'),
+    layers.Conv2D(48, (5, 5), strides=(2, 2), activation='elu'),
+    layers.Conv2D(64, (3, 3), activation='elu'),
+    layers.Conv2D(64, (3, 3), activation='elu'),
+    layers.Dropout(0.5),
+    layers.Flatten(),
+    layers.Dense(100, activation='elu'),
+    layers.Dense(50, activation='elu'),
+    layers.Dense(10, activation='elu'),
+    layers.Dense(1, activation='linear'),
 ])
 
-model.compile(optimizer='adam',
+# Lowered the learning rate to make optimization more stable, fixed the model collapse issue
+model.compile(optimizer=optimizers.Adam(learning_rate=1e-4),
               loss='mean_squared_error',
               metrics=['mae'])
 
-H = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=32)
+# Model Summary
+print("Model Architecture:")
+model.summary()
+
+BATCH_SIZE = 32
+# Increased the epoch count for better performance
+EPOCHS = 60
+train_gen = batch_generator(X_train, y_train, batch_size=BATCH_SIZE, training=True, aug_prob=0.5)
+val_gen = batch_generator(X_test, y_test, batch_size=BATCH_SIZE, training=False)
+train_steps = steps_per_epoch(len(X_train), BATCH_SIZE)
+val_steps = steps_per_epoch(len(X_test), BATCH_SIZE)
+
+# Add early stopping
+early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+
+if hasattr(model, 'fit_generator'):
+    # Older Keras/TF from package_list.txt used fit_generator
+    H = model.fit_generator(
+        train_gen,
+        steps_per_epoch=train_steps,
+        validation_data=val_gen,
+        validation_steps=val_steps,
+        epochs=EPOCHS,
+        verbose=1,
+        callbacks=[early_stop],
+    )
+else:
+    H = model.fit(
+        train_gen,
+        steps_per_epoch=train_steps,
+        validation_data=val_gen,
+        validation_steps=val_steps,
+        epochs=EPOCHS,
+        verbose=1,
+        callbacks=[early_stop],
+    )
 
 # EVALUATION
 plt.figure(figsize=(10, 5))
@@ -57,7 +112,36 @@ plt.title('Distribution of Steering Wheel Angles', fontsize=14)
 plt.xlabel('Steering Angle (Radians/Degrees)', fontsize=12)
 plt.ylabel('Number of Images (Frequency)', fontsize=12)
 plt.grid(axis='y', alpha=0.75)
-plt.legend()
-plt.show()
+plt.tight_layout()
+plt.savefig("steering_histogram.png", dpi=200)
+print("Histogram saved.")
 
 save_model(model, 'baseSelfDrivingCarModel.h5')
+save_model(model, 'model.h5')
+
+# TRAINING PLOTS
+plt.figure(figsize=(12, 5))
+
+# Loss plot
+plt.subplot(1, 2, 1)
+plt.plot(H.history['loss'], label='Training Loss')
+plt.plot(H.history['val_loss'], label='Validation Loss')
+plt.title('Training and Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+
+# MAE plot
+plt.subplot(1, 2, 2)
+plt.plot(H.history['mae'], label='Training MAE')
+plt.plot(H.history['val_mae'], label='Validation MAE')
+plt.title('Training and Validation MAE')
+plt.xlabel('Epochs')
+plt.ylabel('MAE')
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout()
+plt.savefig('training_plots.png', dpi=200)
+print("Training plots saved as 'training_plots.png'")
