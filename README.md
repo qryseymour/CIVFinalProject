@@ -111,6 +111,7 @@ Running modelCreator.py generates:
 - model.h5
 - baseSelfDrivingCarModel.h5
 - steering_histogram.png
+- training_plots.png
 
 **Data Augmentation**
 
