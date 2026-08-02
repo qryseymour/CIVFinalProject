@@ -9,6 +9,7 @@ from keras import Sequential, layers, optimizers
 import matplotlib.pyplot as plt
 from keras.models import save_model, load_model
 import os
+from keras.callbacks import EarlyStopping
 
 # Added for data augmentation, shared preprocessing, and disk-backed batching
 from batch_generator import batch_generator, steps_per_epoch
@@ -67,6 +68,10 @@ model.compile(optimizer=optimizers.Adam(learning_rate=1e-4),
               loss='mean_squared_error',
               metrics=['mae'])
 
+# Model Summary
+print("Model Architecture:")
+model.summary()
+
 BATCH_SIZE = 32
 # Increased the epoch count for better performance
 EPOCHS = 60
@@ -74,6 +79,9 @@ train_gen = batch_generator(X_train, y_train, batch_size=BATCH_SIZE, training=Tr
 val_gen = batch_generator(X_test, y_test, batch_size=BATCH_SIZE, training=False)
 train_steps = steps_per_epoch(len(X_train), BATCH_SIZE)
 val_steps = steps_per_epoch(len(X_test), BATCH_SIZE)
+
+# Add early stopping
+early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
 if hasattr(model, 'fit_generator'):
     # Older Keras/TF from package_list.txt used fit_generator
@@ -84,6 +92,7 @@ if hasattr(model, 'fit_generator'):
         validation_steps=val_steps,
         epochs=EPOCHS,
         verbose=1,
+        callbacks=[early_stop],
     )
 else:
     H = model.fit(
@@ -93,6 +102,7 @@ else:
         validation_steps=val_steps,
         epochs=EPOCHS,
         verbose=1,
+        callbacks=[early_stop],
     )
 
 # EVALUATION
@@ -108,3 +118,30 @@ print("Histogram saved.")
 
 save_model(model, 'baseSelfDrivingCarModel.h5')
 save_model(model, 'model.h5')
+
+# TRAINING PLOTS
+plt.figure(figsize=(12, 5))
+
+# Loss plot
+plt.subplot(1, 2, 1)
+plt.plot(H.history['loss'], label='Training Loss')
+plt.plot(H.history['val_loss'], label='Validation Loss')
+plt.title('Training and Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+
+# MAE plot
+plt.subplot(1, 2, 2)
+plt.plot(H.history['mae'], label='Training MAE')
+plt.plot(H.history['val_mae'], label='Validation MAE')
+plt.title('Training and Validation MAE')
+plt.xlabel('Epochs')
+plt.ylabel('MAE')
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout()
+plt.savefig('training_plots.png', dpi=200)
+print("Training plots saved as 'training_plots.png'")
