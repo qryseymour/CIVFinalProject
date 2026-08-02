@@ -20,6 +20,22 @@ The project includes data augmentation, preprocessing, batch generation, model t
 - Scikit-learn
 - Udacity Self-Driving Car Simulator
 
+**Approach and Challenges**
+
+&nbsp;**Ron**: There were several challenges encountered during the setup operations and basic model initiation procedure that took a long time to overcome when put all together. One of which was even the basic environment and dependency setup, trying to get a right version of Python 3.8 to link up with the system, gathering the right packages, configuring Registry settings to enable packages. Even then, it was its own headache trying to get the Udacity driving simulator to install due to issues with the Unity engine, and then compile the training data together for my teammates. 
+
+&nbsp;However, the biggest issue I faced so far was trying to create the initial .h5 base model used by my team (not regarding any ML refinement or data augmentation techniques.) This was because I was working now with a regression model that was meant to predict the next move, as opposed to classification which we had learned in class. It took quite a bit of research to figure out how to do so and what were the different variables involved with the operation.
+
+&nbsp;**Hyun Joon**: Hyun Joon: Some of the challenges that I faced during this project was difficult to exactly pinpoint what was causing the failure at the time. The simulator kept crashing for me, which I wasn’t able to resolve for my computer and had to download Unity editor and set it up in a roundabout way by rebuilding it with Unity 2020.3. Once I was able to get the simulator working, it wasn’t communicating with the script, and it turned out that the versions of the python-socketio and python-engineio, they had to be downgraded because of the Socker.IO v1 client used by the Unity Simulator that I had to use. 
+
+&nbsp;Another challenge was that, I wanted to make sure after completing the preprocessing, batching and augmentation scripts that it was running the simulation at least up to this point of the project, but I noticed that, once it connected, it just wasn’t able to drive at all. I had to realize that the model prediction value was actually held constant, and it wasn’t being changed and adjusted at all, at 0.00155544, which indicated that the model collapsed during the training. Therefore, going back to the modelCreator.py, by adjusting from relu to elu and changing the learning rate and the number of epochs, and retraining the model, it was possible to fix the issue and see the automatic car drive successfully and see the values change and adjust.
+
+&nbsp;Next challenge was that, once there was a good portion of track being self driven by the car, there was a point in the map, where it looked like given the height of the bump that continued off the outside barrier, where the grey-concreteness of the barrier disappears, but the stretch of dirt land branches off the track, given model was having a difficult time detecting that it’s not part of the road, thus unable to turn left instead and stay on the track. At that point, I raised the number of epochs to 60, noticing yet a small decrement of losses still near the end of 30 epochs, which was successful in overcoming that specific part of the map it had difficulty detecting and make the right decision.
+
+&nbsp;**Nada**:
+
+
+
 **Project Structure**
 
 ```text
@@ -113,6 +129,10 @@ Running modelCreator.py generates:
 - steering_histogram.png
 - training_plots.png
 
+**Image Preprocessing**
+
+Each image is cropped, converted to YUV colour space, blurred, resized to 200×66, and normalized before being passed to the CNN.
+
 **Data Augmentation**
 
 Training images are randomly augmented using:
@@ -123,9 +143,9 @@ Training images are randomly augmented using:
 - Translation
 - Rotation
 
-**Image Preprocessing**
+**Dataset Batching**
 
-Each image is cropped, converted to YUV colour space, blurred, resized to 200×66, and normalized before being passed to the CNN.
+The dataset is grouped into smaller batches so the model can train efficiently without loading all images into memory at once. Each batch is processed consistently before training, helping the CNN learn from the prepared data in an organized and memory-efficient way.
 
 **Testing**
 
