@@ -59,9 +59,9 @@ After downloading, extract the contents into the project directory while preserv
     
 4.  Enable **LongPathEnabled** registry on your **Windows** device. This can be done as either a **Powershell** command or a **RegEdit** change
     
-    1.  If done via **RegEdit**, go to Computer\\HKEY\_LOCAL\_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem, and the **LongPathEnabled** DWORD value to 1, which signals to it that it is enabled.
+    1.  If done via **RegEdit**, go to ```Computer\\HKEY\_LOCAL\_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem```, and the **LongPathEnabled** DWORD value to 1, which signals to it that it is enabled.
         
-    2.  If done as a **Powershell** command, instead open up **Powershell** as an administrator, then copy & paste this command, then execute: New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force 
+    2.  If done as a **Powershell** command, instead open up **Powershell** as an administrator, then copy & paste this command, then execute: ```New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force``` 
         
 5.  Create a **Python 3.8 virtual environment** using the following command: py -3.8 -m venv "”
     
@@ -75,9 +75,9 @@ After downloading, extract the contents into the project directory while preserv
     
 9.  Return to the **virtual environment** and activate it by running the activate script via a terminal command in the scripts directory of the **virtual environment** you created.
     
-10.  Go to the **cloned repository** _(or where_ _**package\_list.txt**_ _should be located,)_ and run the **Powershell** command to install all the **packages** inside the repo’s **package\_list** **file:** Get-Content package\_list.txt | ForEach-Object { pip install $\_ 2>$null } 
+10.  Go to the **cloned repository** _(or where_ _**package\_list.txt**_ _should be located,)_ and run the **Powershell** command to install all the **packages** inside the repo’s **package\_list** **file:** ```Get-Content package\_list.txt | ForEach-Object { pip install $\_ 2>$null }``` 
     
-    1.  Alternatively, you can instead run the terminal command: pip install package\_list.txt, but this does not allow **packages** to be installed concurrently, and any error that occurs from this command will stop the whole process, forcing a redo of reinstallations if running the command again regularly.
+    1.  Alternatively, you can instead run the terminal command: ```pip install package\_list.txt```, but this does not allow **packages** to be installed concurrently, and any error that occurs from this command will stop the whole process, forcing a redo of reinstallations if running the command again regularly.
         
 - Note: If the Udacity simulator connects but the vehicle does not respond, or if no telemetry is received, install these compatible Socket.IO versions inside your virtual environment:
 
