@@ -156,5 +156,14 @@ Our team divided the project into three main parts to work efficiently and impro
 
 &nbsp;&nbsp;&nbsp;&nbsp;Next challenge was that, once there was a good portion of track being self driven by the car, there was a point in the map, where it looked like given the height of the bump that continued off the outside barrier, where the grey-concreteness of the barrier disappears, but the stretch of dirt land branches off the track, given model was having a difficult time detecting that it’s not part of the road, thus unable to turn left instead and stay on the track. At that point, I raised the number of epochs to 60, noticing yet a small decrement of losses still near the end of 30 epochs, which was successful in overcoming that specific part of the map it had difficulty detecting and make the right decision.
 
-&nbsp;&nbsp;&nbsp;&nbsp;**Nada**:
+&nbsp;&nbsp;&nbsp;&nbsp;**Nada**: For my part of the project, I focused on training the neural network and testing the final model in the simulator. The car would consistently go off-track at the same sharp turn on the simple lake track, always drifting to the right. This became the main problem I needed to solve.
 
+&nbsp;&nbsp;&nbsp;&nbsp;For my approach, I systematically analyzed the training metrics and data distribution to find the root cause. The loss curves showed the model was learning well but plateauing around epoch 15-20, and the steering histogram revealed a heavy peak at 0 – meaning over 90% of the data was driving straight. The model had learned to go straight but hadn't learned enough about turns.
+
+&nbsp;&nbsp;&nbsp;&nbsp;To fix this, I made several improvements:
+1. **Used all three camera images** – The original code only used the center camera. I modified modelCreator.py to load left and right camera images with steering corrections (±0.2), tripling the dataset from ~11,000 to ~33,000 images.
+2. **Increased augmentation probability** – I raised aug_prob from 0.5 to 0.8 for more aggressive data augmentation.
+3. **Reduced epochs to 30 with early stopping** – Since the loss had already flattened, more epochs weren't helping.
+4. **Tuned speed** – Testing with maxSpeed = 5 helped the car handle turns more smoothly.
+
+&nbsp;&nbsp;&nbsp;&nbsp;My main challenge was that the car kept failing at the same turn. Increasing epochs to 100 and reducing speed didn't fix the issue. The root cause was the dataset itself – not enough examples of that specific turn. The solution was using left/right camera images with steering corrections, which taught the model how to recover when drifting off-center. This finally solved the problem and the car completed full laps successfully.
