@@ -110,10 +110,10 @@ python modelCreator.py
 
 Running modelCreator.py generates:
 
-- model.h5
-- baseSelfDrivingCarModel.h5
-- steering_histogram.png
-- training_plots.png
+- `model.h5`
+- `baseSelfDrivingCarModel.h5`
+- `steering_histogram.png`
+- `training_plots.png`
 
 **Image Preprocessing**
 
@@ -139,7 +139,7 @@ After training:
 
 1. Launch the Udacity simulator.
 2. Select Autonomous Mode.
-3. Run TestSimulation.py.
+3. Run `TestSimulation.py`.
 4. The simulator will connect automatically and use the trained model.
 
 **Approach and Challenges**
