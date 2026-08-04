@@ -11,10 +11,8 @@ Our final CVI project implements a self driving car using a Convolutional Neural
 
 The project includes data augmentation, preprocessing, batch generation, model training, and simulator testing.
 
-**Video Demo**
-<sub>
-## [Youtube Link](https://www.youtube.com/watch?v=o1TjPNNUZuE)
-</sub>
+## [Video Demo](https://www.youtube.com/watch?v=o1TjPNNUZuE)
+
 **Main technologies**
 
 - Python 3.8
